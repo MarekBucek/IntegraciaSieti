@@ -1,0 +1,1 @@
+Vytvoril som si subor.
