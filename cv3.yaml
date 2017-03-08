@@ -24,7 +24,7 @@ parameters:
     type: string
     default: cirros
 
-  Image:
+  Network:
     description: Network
     type: string
     default: ext-net
