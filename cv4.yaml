@@ -90,7 +90,7 @@ resources:
       fixed_ips:
         - subnet { get_resource: Subnet }
       security_groups:
-        - { get_resource: JumpPrivateSecurityGroup }
+        - { get_resource: JumpSecurityGroup }
       network: { get_resource: Net }
 
   Jump:
