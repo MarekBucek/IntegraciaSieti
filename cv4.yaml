@@ -7,7 +7,7 @@ parameters:
   Cvicenie:
     description: Cislo cvicenia
     type: string
-    default: cv3
+    default: cv4
     
   AvailabilityZone:
     description: Availability zone
