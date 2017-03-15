@@ -69,10 +69,10 @@ resources:
       router: { get_resource: Router }
       subnet: { get_resource: Subnet }
       
-  Instance:
+  Jump:
     type: OS::Nova::Server
     properties:
-      name: { list_join: [ '-', [ { get_param: 'Cvicenie' }, 'instance' ] ] }
+      name: { list_join: [ '-', [ { get_param: 'Cvicenie' }, 'jump' ] ] }
       availability_zone: { get_param: 'AvailabilityZone' }
       flavor: { get_param: 'Flavor' }
       image: { get_param: 'Image' } 
@@ -82,18 +82,3 @@ resources:
         #!/bin/bash
         apt-get update -y
       user_data_format: RAW
-      
-#  Instance:
-#    type: OS::Nova::Server
-#    properties:
-#      #name: instance-cv3
-#      name: { list_join: [ '-', [ { get_param: 'Cvicenie' }, 'instance' ] ] }
-#      availability_zone: { get_param: 'AvailabilityZone' }
-#      flavor: { get_param: 'Flavor' }
-#      image: { get_param: 'Image' } 
-#      networks: 
-#        - network: { get_param: 'Network' }
-#      user_data: |
-#        #!/bin/bash
-#        apt-get update -y
-#      user_data_format: RAW
