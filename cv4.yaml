@@ -53,6 +53,16 @@ resources:
       enable_dhcp: True
       network: { get_resource: Net }
       
+  Router:
+    type: OS::Neutron::Router
+    properties:
+      admin_state_up: True
+      name: { list_join: [ '-', [ { get_param: 'Enviroment' }, 'router' ] ] }
+      external_gateway_info: {
+        enable_snat: True,
+        nework: ext-net
+      }
+      
 #  Instance:
 #    type: OS::Nova::Server
 #    properties:
