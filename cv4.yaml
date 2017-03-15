@@ -88,7 +88,7 @@ resources:
     properties:
       name: { list_join: [ '-', [ { get_param: 'Cvicenie' }, 'jump-port' ] ] }
       fixed_ips:
-        - subnet { get_resource: Subnet }
+        - subnet: { get_resource: Subnet }
       security_groups:
         - { get_resource: JumpSecurityGroup }
       network: { get_resource: Net }
