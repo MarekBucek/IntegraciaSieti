@@ -1,7 +1,7 @@
 ---
 heat_template_version: 2016-04-08
 
-description: Basic Infrastructure cv.4
+description: test template cv.3
 
 parameters:
   Cvicenie:
