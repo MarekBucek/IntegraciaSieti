@@ -60,7 +60,7 @@ resources:
       name: { list_join: [ '-', [ { get_param: 'Enviroment' }, 'router' ] ] }
       external_gateway_info: {
         enable_snat: True,
-        nework: ext-net
+        network: ext-net
       }
       
 #  Instance:
