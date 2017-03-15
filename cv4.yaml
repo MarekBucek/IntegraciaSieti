@@ -36,6 +36,16 @@ resources:
       admin_state_up: True
       name: { list_join: [ '-', [ { get_param: 'Enviroment' }, 'network' ] ] }
       shared: False
+  Subnet:
+    type: OS::Neutron::Subnet
+    properties:
+      name: { list_join: [ '-', [ { get_param: 'Enviroment' }, 'subnet' ] ] }
+      cidr: { get_param: SubnetCidr }
+      dns_nameservers:
+        - 8.8.8.8
+        - 8.8.4.4
+      enable_dhcp: True
+      network: { get_resource: Net }
       
 #  Instance:
 #    type: OS::Nova::Server
