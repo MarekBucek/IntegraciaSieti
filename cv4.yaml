@@ -77,8 +77,18 @@ resources:
       flavor: { get_param: 'Flavor' }
       image: { get_param: 'Image' } 
       networks: 
-        - network: { get_param: 'Subnet' }
+        - network: { get_resource: 'Subnet' }
       user_data: |
         #!/bin/bash
         apt-get update -y
       user_data_format: RAW
+
+  JumpFloatingIP:
+    type: OS::Neutron::FloatingIP
+    properties:
+      floating_network: ext-net
+
+  JumpFloatingIpAssociation:
+    type: OS::Neutron::FloatingIPAssociation
+    properties:
+      floating_ip: { get_param: ProxyFloatingIpId }
