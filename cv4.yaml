@@ -74,6 +74,25 @@ resources:
       router: { get_resource: Router }
       subnet: { get_resource: Subnet }
       
+  JumpSecurityGroup:
+    type: OS::Neutron::SecurityGroup
+    properties:
+      name: { list_join: [ '-', [ { get_param: 'Cvicenie' }, 'jump-private-security-group' ] ] }
+      rules: [
+      { direction: ingress, ethernetype: IPv4, protocol: tcp, port_range_min: 22, port_range_max: 22, remote_ip_prefix: 158.193.0.0/16 },
+      { direction: ingress, ethernetype: IPv4, protocol: icmp, remote_ip_prefix: 158.193.0.0/16 },
+      ]
+
+  JumpPort:
+    type: OS::Neutron::Port
+    properties:
+      name: { list_join: [ '-', [ { get_param: 'Cvicenie' }, 'jump-port' ] ] }
+      fixed_ips:
+        - subnet { get_resource: Subnet }
+      security_groups:
+        - { get_resource: JumpPrivateSecurityGroup }
+      networkL { get_resource: Net }
+
   Jump:
     type: OS::Nova::Server
     properties:
@@ -82,7 +101,7 @@ resources:
       flavor: { get_param: 'Flavor' }
       image: { get_param: 'Image' } 
       networks: 
-        - network: { get_resource: 'Subnet' }
+        - port: { get_resource: JumpPort }
       user_data: |
         #!/bin/bash
         apt-get update -y
@@ -92,4 +111,4 @@ resources:
     type: OS::Neutron::FloatingIPAssociation
     properties:
       floatingip_id: { get_param: JumpFloatingIpID }
-      port_id: { get_resource: ProxyPort }
+      port_id: { get_resource: JumpPort }
