@@ -1,0 +1,119 @@
+---
+heat_template_version: 2016-04-08
+
+description: Basic Infrastructure cv.4
+
+parameters:
+  Cvicenie:
+    description: Cislo cvicenia
+    type: string
+    default: cv4
+    
+  AvailabilityZone:
+    description: Availability zone
+    type: string
+    default: any
+    
+  Flavor:
+    description: Flavor
+    type: string
+    default: Linux
+    
+  Image:
+    description: Image
+    type: string
+    default: Ubuntu server 14.04 amd64 KIS
+  
+  Enviroment:
+    description: Enviroment
+    type: string
+    default: test
+    
+  SubnetCidr:
+    description: SubnetCidr
+    type: string
+    default: 10.255.255.0/24
+    
+  JumpFloatingIpID:
+    description: JumpFloatingIpID
+    type: string
+    default: 5834e84f-ff70-4932-9385-332d4f6c84f9
+    
+resources:
+  Net:
+    type: OS::Neutron::Net
+    properties:
+      admin_state_up: True
+      name: { list_join: [ '-', [ { get_param: 'Enviroment' }, 'network' ] ] }
+      shared: False
+      
+  Subnet:
+    type: OS::Neutron::Subnet
+    properties:
+      name: { list_join: [ '-', [ { get_param: 'Enviroment' }, 'subnet' ] ] }
+      cidr: { get_param: SubnetCidr }
+      dns_nameservers:
+        - 8.8.8.8
+        - 8.8.4.4
+      enable_dhcp: True
+      network: { get_resource: Net }
+      
+  Router:
+    type: OS::Neutron::Router
+    properties:
+      admin_state_up: True
+      name: { list_join: [ '-', [ { get_param: 'Enviroment' }, 'router' ] ] }
+      external_gateway_info: {
+        enable_snat: True,
+        network: ext-net
+      }
+      
+  RouterInterface:
+    type: OS::Neutron::RouterInterface
+    properties:
+      router: { get_resource: Router }
+      subnet: { get_resource: Subnet }
+      
+  JumpSecurityGroup:
+    type: OS::Neutron::SecurityGroup
+    properties:
+      name: { list_join: [ '-', [ { get_param: 'Cvicenie' }, 'jump-private-security-group' ] ] }
+      rules: [
+      { direction: ingress, ethertype: IPv4, protocol: tcp, port_range_min: 22, port_range_max: 22, remote_ip_prefix: 158.193.0.0/16 },
+      { direction: ingress, ethertype: IPv4, protocol: icmp, remote_ip_prefix: 158.193.0.0/16 },
+      ]
+
+  JumpPort:
+    type: OS::Neutron::Port
+    properties:
+      name: { list_join: [ '-', [ { get_param: 'Cvicenie' }, 'jump-port' ] ] }
+      fixed_ips:
+        - subnet: { get_resource: Subnet }
+      security_groups:
+        - { get_resource: JumpSecurityGroup }
+      network: { get_resource: Net }
+
+  Jump:
+    type: OS::Nova::Server
+    properties:
+      name: { list_join: [ '-', [ { get_param: 'Cvicenie' }, 'jump' ] ] }
+      availability_zone: { get_param: 'AvailabilityZone' }
+      flavor: { get_param: 'Flavor' }
+      image: { get_param: 'Image' } 
+      networks: 
+        - port: { get_resource: JumpPort }
+      user_data: |
+        str_replace:
+          template: |
+            #!/bin/bash
+            hostname $Enviroment-jump
+            echo "Hello World !!!"
+          params:
+            $Enviroment: { get_param: Enviroment }    
+      user_data_format: RAW
+
+  JumpFloatingIpAssociation:
+    type: OS::Neutron::FloatingIPAssociation
+    properties:
+      floatingip_id: { get_param: JumpFloatingIpID }
+      port_id: { get_resource: JumpPort }
