@@ -91,7 +91,7 @@ resources:
         - subnet { get_resource: Subnet }
       security_groups:
         - { get_resource: JumpPrivateSecurityGroup }
-      networkL { get_resource: Net }
+      network: { get_resource: Net }
 
   Jump:
     type: OS::Nova::Server
