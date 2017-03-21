@@ -100,14 +100,16 @@ resources:
       availability_zone: { get_param: 'AvailabilityZone' }
       flavor: { get_param: 'Flavor' }
       image: { get_param: 'Image' } 
+      #network: { get_param: 'Network' }
       networks: 
         - port: { get_resource: JumpPort }
+        - subnet: { get_resource: Subnet }
       user_data: |
         str_replace:
           template: |
             #!/bin/bash
             hostname $Enviroment-jump
-            echo "Hello World !!!"
+            echo "JumpCloud"
           params:
             $Enviroment: { get_param: Enviroment }    
       user_data_format: RAW
