@@ -123,11 +123,10 @@ resources:
     properties:
       name: { list_join: [ '-', [ { get_param: 'Cvicenie' }, 'Application-security-group' ] ] }
       rules: [
-      { direction: ingress, ethertype: IPv4, protocol: tcp, port_range_min: 22, port_range_max: 22, remote_ip_prefix: 158.193.0.0/16 },
-      { direction: ingress, ethertype: IPv4, protocol: tcp, port_range_min: 80, port_range_max: 80, remote_ip_prefix: 158.193.0.0/16 },
-      { direction: ingress, ethertype: IPv4, protocol: tcp, port_range_min: 443, port_range_max: 443, remote_ip_prefix: 158.193.0.0/16 },
-      { direction: ingress, ethertype: IPv4, protocol: icmp, remote_ip_prefix: 158.193.0.0/16 },
-      { direction: engress, ethertype: IPv4, protocol: icmp, remote_ip_prefix: 158.193.0.0/16 }
+      { direction: ingress, ethertype: IPv4, protocol: tcp, port_range_min: 22, port_range_max: 22, remote_ip_prefix: 10.255.255.0/24 },
+      { direction: ingress, ethertype: IPv4, protocol: tcp, port_range_min: 80, port_range_max: 80, remote_ip_prefix: 10.255.255.0/24 },
+      { direction: ingress, ethertype: IPv4, protocol: tcp, port_range_min: 443, port_range_max: 443, remote_ip_prefix: 10.255.255.0/24 },
+      { direction: ingress, ethertype: IPv4, protocol: icmp, remote_ip_prefix: 10.255.255.0/24 },
       ]
 
   ApachePort:
@@ -154,8 +153,8 @@ resources:
           template: |
             #!/bin/bash
             hostname $Enviroment-apache
-            echo "Hello World !!!"
-            apt-get install apache2
+            apt-get update -y 
+            apt-get install apache2 -y
           params:
             $Enviroment: { get_param: Enviroment }    
       user_data_format: RAW
