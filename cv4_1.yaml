@@ -103,7 +103,7 @@ resources:
       #network: { get_param: 'Network' }
       networks: 
         - port: { get_resource: JumpPort }
-        - subnet: { get_resource: Subnet }
+        #- subnet: { get_resource: Subnet }
       user_data: |
         str_replace:
           template: |
@@ -127,6 +127,7 @@ resources:
       rules: [
       { direction: ingress, ethertype: IPv4, protocol: tcp, port_range_min: 22, port_range_max: 22, remote_ip_prefix: 10.255.255.0/24 },
       { direction: ingress, ethertype: IPv4, protocol: tcp, port_range_min: 80, port_range_max: 80, remote_ip_prefix: 10.255.255.0/24 },
+      { direction: ingress, ethertype: IPv4, protocol: tcp, port_range_min: 80, port_range_max: 80, remote_ip_prefix: 158.193.0.0/16 },
       { direction: ingress, ethertype: IPv4, protocol: tcp, port_range_min: 443, port_range_max: 443, remote_ip_prefix: 10.255.255.0/24 },
       { direction: ingress, ethertype: IPv4, protocol: icmp, remote_ip_prefix: 10.255.255.0/24 },
       ]
@@ -144,6 +145,7 @@ resources:
   Apache:
     type: OS::Nova::Server
     properties:
+      #name: instance-cv3
       name: { list_join: [ '-', [ { get_param: 'Cvicenie' }, 'apache' ] ] }
       availability_zone: { get_param: 'AvailabilityZone' }
       flavor: { get_param: 'Flavor' }
