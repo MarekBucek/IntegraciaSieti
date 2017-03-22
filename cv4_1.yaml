@@ -201,7 +201,7 @@ resources:
       fixed_ips:
         - subnet: { get_resource: Subnet }
       security_groups:
-        - { get_resource: ApacheSecurityGroup }
+        - { get_resource: ProxySecurityGroup }
       network: { get_resource: Net }
 
   Proxy:
