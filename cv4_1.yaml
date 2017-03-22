@@ -39,6 +39,11 @@ parameters:
     type: string
     default: 5834e84f-ff70-4932-9385-332d4f6c84f9
     
+  ProxyFloatingIpID:
+    description: ProxyFloatingIpID
+    type: string
+    default: e61708b5-e889-450d-b85c-c014041325fd
+    
 resources:
   Net:
     type: OS::Neutron::Net
@@ -74,6 +79,9 @@ resources:
       router: { get_resource: Router }
       subnet: { get_resource: Subnet }
       
+#
+# Jump
+#
   JumpSecurityGroup:
     type: OS::Neutron::SecurityGroup
     properties:
@@ -119,7 +127,10 @@ resources:
     properties:
       floatingip_id: { get_param: JumpFloatingIpID }
       port_id: { get_resource: JumpPort }
-      
+
+#
+# App Server
+#
   ApacheSecurityGroup:
     type: OS::Neutron::SecurityGroup
     properties:
@@ -157,6 +168,57 @@ resources:
           template: |
             #!/bin/bash
             hostname $Enviroment-apache
+            apt-get update -y 
+            apt-get install apache2 -y
+          params:
+            $Enviroment: { get_param: Enviroment }    
+      user_data_format: RAW
+
+#
+# Proxy
+#
+  ProxyFloatingIpAssociation:
+    type: OS::Neutron::FloatingIPAssociation
+    properties:
+      floatingip_id: { get_param: ProxyFloatingIpID }
+      port_id: { get_resource: ProxyPort }
+      
+  ProxySecurityGroup:
+    type: OS::Neutron::SecurityGroup
+    properties:
+      name: { list_join: [ '-', [ { get_param: 'Cvicenie' }, 'Proxy-security-group' ] ] }
+      rules: [
+      { direction: ingress, ethertype: IPv4, protocol: tcp, port_range_min: 22, port_range_max: 22, remote_ip_prefix: 10.255.255.0/24 },
+      { direction: ingress, ethertype: IPv4, protocol: tcp, port_range_min: 80, port_range_max: 80, remote_ip_prefix: 158.193.0.0/16 },
+      { direction: ingress, ethertype: IPv4, protocol: tcp, port_range_min: 443, port_range_max: 443, remote_ip_prefix: 158.193.0.0/16 },
+      { direction: ingress, ethertype: IPv4, protocol: icmp, remote_ip_prefix: 158.193.0.0/16 },
+      ]
+
+  ProxyPort:
+    type: OS::Neutron::Port
+    properties:
+      name: { list_join: [ '-', [ { get_param: 'Cvicenie' }, 'proxy-port' ] ] }
+      fixed_ips:
+        - subnet: { get_resource: Subnet }
+      security_groups:
+        - { get_resource: ApacheSecurityGroup }
+      network: { get_resource: Net }
+
+  Proxy:
+    type: OS::Nova::Server
+    properties:
+      #name: instance-cv5
+      name: { list_join: [ '-', [ { get_param: 'Cvicenie' }, 'proxy' ] ] }
+      availability_zone: { get_param: 'AvailabilityZone' }
+      flavor: { get_param: 'Flavor' }
+      image: { get_param: 'Image' } 
+      networks: 
+        - port: { get_resource: ApachePort }
+      user_data: |
+        str_replace:
+          template: |
+            #!/bin/bash
+            hostname $Enviroment-proxy
             apt-get update -y 
             apt-get install apache2 -y
           params:
