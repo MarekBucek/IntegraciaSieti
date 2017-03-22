@@ -1,21 +1,3 @@
-Skip to content
-This repository
-Search
-Pull requests
-Issues
-Gist
- @MarekBucek
- Sign out
- Unwatch 1
-  Star 0
-  Fork 0 MarekBucek/IntegraciaSieti
- Code  Issues 0  Pull requests 1  Projects 0  Wiki  Pulse  Graphs  Settings
-Branch: IS_cv5 Find file Copy pathIntegraciaSieti/cv4_1.yaml
-6885af7  6 minutes ago
-@MarekBucek MarekBucek Update cv4_1.yaml
-1 contributor
-RawBlameHistory     
-165 lines (145 sloc)  4.91 KB
 ---
 heat_template_version: 2016-04-08
 
