@@ -37,13 +37,13 @@ parameters:
   JumpFloatingIpID:
     description: JumpFloatingIpID
     type: string
-    default: 5834e84f-ff70-4932-9385-332d4f6c84f9
-    
+    default: 979d0edf-41e0-4ce0-aa58-bded78b98b10 
+  
   ProxyFloatingIpID:
     description: ProxyFloatingIpID
     type: string
-    default: e61708b5-e889-450d-b85c-c014041325fd
-    
+    default: 929cc9d6-b3b4-4d16-a358-f8692636fe3a 
+        
 resources:
   Net:
     type: OS::Neutron::Net
@@ -79,9 +79,6 @@ resources:
       router: { get_resource: Router }
       subnet: { get_resource: Subnet }
       
-#
-# Jump
-#
   JumpSecurityGroup:
     type: OS::Neutron::SecurityGroup
     properties:
@@ -89,8 +86,9 @@ resources:
       rules: [
       { direction: ingress, ethertype: IPv4, protocol: tcp, port_range_min: 22, port_range_max: 22, remote_ip_prefix: 158.193.0.0/16 },
       { direction: ingress, ethertype: IPv4, protocol: icmp, remote_ip_prefix: 158.193.0.0/16 },
-      ]
-
+      { direction: ingress, ethertype: IPv4, protocol: tcp, port_range_min: 80, port_range_max: 80, remote_ip_prefix: 158.193.0.0/16 },
+      { direction: ingress, ethertype: IPv4, protocol: tcp, port_range_min: 443, port_range_max: 443, remote_ip_prefix: 158.193.0.0/16 } ]
+   
   JumpPort:
     type: OS::Neutron::Port
     properties:
@@ -108,92 +106,54 @@ resources:
       availability_zone: { get_param: 'AvailabilityZone' }
       flavor: { get_param: 'Flavor' }
       image: { get_param: 'Image' } 
-      #network: { get_param: 'Network' }
       networks: 
         - port: { get_resource: JumpPort }
-        #- subnet: { get_resource: Subnet }
       user_data: |
-        str_replace:
-          template: |
-            #!/bin/bash
-            hostname $Enviroment-jump
-            echo "JumpCloud"
-          params:
-            $Enviroment: { get_param: Enviroment }    
+        #!/bin/bash
+        apt-get update -y
       user_data_format: RAW
 
-  JumpFloatingIpAssociation:
-    type: OS::Neutron::FloatingIPAssociation
-    properties:
-      floatingip_id: { get_param: JumpFloatingIpID }
-      port_id: { get_resource: JumpPort }
-
-#
-# App Server
-#
-  ApacheSecurityGroup:
+  AppSecurityGroup:
     type: OS::Neutron::SecurityGroup
     properties:
-      name: { list_join: [ '-', [ { get_param: 'Cvicenie' }, 'Application-security-group' ] ] }
+      name: { list_join: [ '-', [ { get_param: 'Cvicenie' }, 'app-private-security-group' ] ] }
       rules: [
       { direction: ingress, ethertype: IPv4, protocol: tcp, port_range_min: 22, port_range_max: 22, remote_ip_prefix: 10.255.255.0/24 },
-      { direction: ingress, ethertype: IPv4, protocol: tcp, port_range_min: 80, port_range_max: 80, remote_ip_prefix: 10.255.255.0/24 },
-      { direction: ingress, ethertype: IPv4, protocol: tcp, port_range_min: 80, port_range_max: 80, remote_ip_prefix: 158.193.0.0/16 },
-      { direction: ingress, ethertype: IPv4, protocol: tcp, port_range_min: 443, port_range_max: 443, remote_ip_prefix: 10.255.255.0/24 },
       { direction: ingress, ethertype: IPv4, protocol: icmp, remote_ip_prefix: 10.255.255.0/24 },
-      ]
-
-  ApachePort:
-    type: OS::Neutron::Port
-    properties:
-      name: { list_join: [ '-', [ { get_param: 'Cvicenie' }, 'apache-port' ] ] }
-      fixed_ips:
-        - subnet: { get_resource: Subnet }
-      security_groups:
-        - { get_resource: ApacheSecurityGroup }
-      network: { get_resource: Net }
-
-  Apache:
-    type: OS::Nova::Server
-    properties:
-      #name: instance-cv3
-      name: { list_join: [ '-', [ { get_param: 'Cvicenie' }, 'apache' ] ] }
-      availability_zone: { get_param: 'AvailabilityZone' }
-      flavor: { get_param: 'Flavor' }
-      image: { get_param: 'Image' } 
-      networks: 
-        - port: { get_resource: ApachePort }
-      user_data: |
-        str_replace:
-          template: |
-            #!/bin/bash
-            hostname $Enviroment-apache
-            apt-get update -y 
-            apt-get install apache2 -y
-          params:
-            $Enviroment: { get_param: Enviroment }    
-      user_data_format: RAW
-
-#
-# Proxy
-#
-  ProxyFloatingIpAssociation:
-    type: OS::Neutron::FloatingIPAssociation
-    properties:
-      floatingip_id: { get_param: ProxyFloatingIpID }
-      port_id: { get_resource: ProxyPort }
+      { direction: ingress, ethertype: IPv4, protocol: tcp, port_range_min: 80, port_range_max: 80, remote_ip_prefix: 10.255.255.0/24 },
+      { direction: ingress, ethertype: IPv4, protocol: tcp, port_range_min: 443, port_range_max: 443, remote_ip_prefix: 10.255.255.0/24 } ]
       
   ProxySecurityGroup:
     type: OS::Neutron::SecurityGroup
     properties:
-      name: { list_join: [ '-', [ { get_param: 'Cvicenie' }, 'Proxy-security-group' ] ] }
+      name: { list_join: [ '-', [ { get_param: 'Cvicenie' }, 'proxy-private-security-group' ] ] }
       rules: [
-      { direction: ingress, ethertype: IPv4, protocol: tcp, port_range_min: 22, port_range_max: 22, remote_ip_prefix: 10.255.255.0/24 },
-      { direction: ingress, ethertype: IPv4, protocol: tcp, port_range_min: 80, port_range_max: 80, remote_ip_prefix: 158.193.0.0/16 },
-      { direction: ingress, ethertype: IPv4, protocol: tcp, port_range_min: 443, port_range_max: 443, remote_ip_prefix: 158.193.0.0/16 },
       { direction: ingress, ethertype: IPv4, protocol: icmp, remote_ip_prefix: 158.193.0.0/16 },
-      ]
+      { direction: ingress, ethertype: IPv4, protocol: tcp, port_range_min: 80, port_range_max: 80, remote_ip_prefix: 158.193.0.0/16 },
+      { direction: ingress, ethertype: IPv4, protocol: tcp, port_range_min: 443, port_range_max: 443, remote_ip_prefix: 158.193.0.0/16 }, 
+      { direction: ingress, ethertype: IPv4, protocol: tcp, port_range_min: 22, port_range_max: 22, remote_ip_prefix: 10.255.255.0/24 } ]      
 
+  App:
+    type: OS::Nova::Server
+    properties:
+      name: { list_join: [ '-', [ { get_param: 'Cvicenie' }, 'App' ] ] }
+      availability_zone: { get_param: 'AvailabilityZone' }
+      flavor: { get_param: 'Flavor' }
+      image: { get_param: 'Image' } 
+      security_groups:
+        - { get_resource: AppSecurityGroup }
+      networks: 
+        - subnet: { get_resource: Subnet }
+        
+      user_data: |
+            #!/bin/bash
+            apt-get update -y
+            apt-get install apache2 -y
+            apache2 start
+          
+            
+      user_data_format: RAW
+      
   ProxyPort:
     type: OS::Neutron::Port
     properties:
@@ -202,12 +162,11 @@ resources:
         - subnet: { get_resource: Subnet }
       security_groups:
         - { get_resource: ProxySecurityGroup }
-      network: { get_resource: Net }
-
+      network: { get_resource: Net }      
+      
   Proxy:
     type: OS::Nova::Server
     properties:
-      #name: instance-cv5
       name: { list_join: [ '-', [ { get_param: 'Cvicenie' }, 'proxy' ] ] }
       availability_zone: { get_param: 'AvailabilityZone' }
       flavor: { get_param: 'Flavor' }
@@ -215,12 +174,22 @@ resources:
       networks: 
         - port: { get_resource: ProxyPort }
       user_data: |
-        str_replace:
-          template: |
-            #!/bin/bash
-            hostname $Enviroment-proxy
-            apt-get update -y 
-            apt-get install apache2 -y
-          params:
-            $Enviroment: { get_param: Enviroment }    
+        #!/bin/bash
+        apt-get update -y
+        apt-get install apache2 -y
+        apache2 start
       user_data_format: RAW
+
+  JumpFloatingIpAssociation:
+    type: OS::Neutron::FloatingIPAssociation
+    properties:
+      floatingip_id: { get_param: JumpFloatingIpID }
+      port_id: { get_resource: JumpPort }
+      
+  ProxyFloatingIpAssociation:
+    type: OS::Neutron::FloatingIPAssociation
+    properties:
+      floatingip_id: { get_param: ProxyFloatingIpID }
+      port_id: { get_resource: ProxyPort }
+
+
