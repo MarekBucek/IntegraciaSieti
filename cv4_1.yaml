@@ -213,7 +213,7 @@ resources:
       flavor: { get_param: 'Flavor' }
       image: { get_param: 'Image' } 
       networks: 
-        - port: { get_resource: ApachePort }
+        - port: { get_resource: ProxyPort }
       user_data: |
         str_replace:
           template: |
