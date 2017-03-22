@@ -112,7 +112,7 @@ resources:
       networks: 
         - port: { get_resource: JumpPort }
         #- subnet: { get_resource: Subnet }
-      user_data: |
+      user_data:
         str_replace:
           template: |
             #!/bin/bash
@@ -129,12 +129,12 @@ resources:
       port_id: { get_resource: JumpPort }
 
 #
-# App Server
+# Apache Server
 #
   ApacheSecurityGroup:
     type: OS::Neutron::SecurityGroup
     properties:
-      name: { list_join: [ '-', [ { get_param: 'Cvicenie' }, 'Application-security-group' ] ] }
+      name: { list_join: [ '-', [ { get_param: 'Cvicenie' }, 'Apache-security-group' ] ] }
       rules: [
       { direction: ingress, ethertype: IPv4, protocol: tcp, port_range_min: 22, port_range_max: 22, remote_ip_prefix: 10.255.255.0/24 },
       { direction: ingress, ethertype: IPv4, protocol: tcp, port_range_min: 80, port_range_max: 80, remote_ip_prefix: 10.255.255.0/24 },
@@ -163,7 +163,7 @@ resources:
       image: { get_param: 'Image' } 
       networks: 
         - port: { get_resource: ApachePort }
-      user_data: |
+      user_data:
         str_replace:
           template: |
             #!/bin/bash
@@ -214,7 +214,7 @@ resources:
       image: { get_param: 'Image' } 
       networks: 
         - port: { get_resource: ProxyPort }
-      user_data: |
+      user_data:
         str_replace:
           template: |
             #!/bin/bash
