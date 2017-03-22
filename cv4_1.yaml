@@ -42,7 +42,7 @@ parameters:
   ProxyFloatingIpID:
     description: ProxyFloatingIpID
     type: string
-    default: e61708b5-e889-450d-b85c-c014041325fd
+    default: 6eb3aacb-2f05-4376-b52e-ebc97142f688
     
 resources:
   Net:
