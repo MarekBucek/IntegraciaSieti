@@ -238,7 +238,7 @@ resources:
             ProxyPassReverse / http://10.255.255.4/
 
             ErrorLog /var/log/apache2/integracia-6.cloud-kis.net_error.log
-            CustomLog ${APACHE_LOG_DIR}/integracia-6.cloud-kis.net_access.log combined
+            CustomLog /var/log/apache2/integracia-6.cloud-kis.net_access.log combined
             </VirtualHost>
             EOF
             
