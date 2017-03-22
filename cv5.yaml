@@ -1,0 +1,184 @@
+Skip to content
+This repository
+Search
+Pull requests
+Issues
+Gist
+ @MarekBucek
+ Sign out
+ Unwatch 1
+  Star 0
+  Fork 0 MarekBucek/IntegraciaSieti
+ Code  Issues 0  Pull requests 1  Projects 0  Wiki  Pulse  Graphs  Settings
+Branch: IS_cv5 Find file Copy pathIntegraciaSieti/cv4_1.yaml
+6885af7  6 minutes ago
+@MarekBucek MarekBucek Update cv4_1.yaml
+1 contributor
+RawBlameHistory     
+165 lines (145 sloc)  4.91 KB
+---
+heat_template_version: 2016-04-08
+
+description: Basic Infrastructure cv.4
+
+parameters:
+  Cvicenie:
+    description: Cislo cvicenia
+    type: string
+    default: cv4
+    
+  AvailabilityZone:
+    description: Availability zone
+    type: string
+    default: any
+    
+  Flavor:
+    description: Flavor
+    type: string
+    default: Linux
+    
+  Image:
+    description: Image
+    type: string
+    default: Ubuntu server 14.04 amd64 KIS
+  
+  Enviroment:
+    description: Enviroment
+    type: string
+    default: test
+    
+  SubnetCidr:
+    description: SubnetCidr
+    type: string
+    default: 10.255.255.0/24
+    
+  JumpFloatingIpID:
+    description: JumpFloatingIpID
+    type: string
+    default: 5834e84f-ff70-4932-9385-332d4f6c84f9
+    
+resources:
+  Net:
+    type: OS::Neutron::Net
+    properties:
+      admin_state_up: True
+      name: { list_join: [ '-', [ { get_param: 'Enviroment' }, 'network' ] ] }
+      shared: False
+      
+  Subnet:
+    type: OS::Neutron::Subnet
+    properties:
+      name: { list_join: [ '-', [ { get_param: 'Enviroment' }, 'subnet' ] ] }
+      cidr: { get_param: SubnetCidr }
+      dns_nameservers:
+        - 8.8.8.8
+        - 8.8.4.4
+      enable_dhcp: True
+      network: { get_resource: Net }
+      
+  Router:
+    type: OS::Neutron::Router
+    properties:
+      admin_state_up: True
+      name: { list_join: [ '-', [ { get_param: 'Enviroment' }, 'router' ] ] }
+      external_gateway_info: {
+        enable_snat: True,
+        network: ext-net
+      }
+      
+  RouterInterface:
+    type: OS::Neutron::RouterInterface
+    properties:
+      router: { get_resource: Router }
+      subnet: { get_resource: Subnet }
+      
+  JumpSecurityGroup:
+    type: OS::Neutron::SecurityGroup
+    properties:
+      name: { list_join: [ '-', [ { get_param: 'Cvicenie' }, 'jump-private-security-group' ] ] }
+      rules: [
+      { direction: ingress, ethertype: IPv4, protocol: tcp, port_range_min: 22, port_range_max: 22, remote_ip_prefix: 158.193.0.0/16 },
+      { direction: ingress, ethertype: IPv4, protocol: icmp, remote_ip_prefix: 158.193.0.0/16 },
+      ]
+
+  JumpPort:
+    type: OS::Neutron::Port
+    properties:
+      name: { list_join: [ '-', [ { get_param: 'Cvicenie' }, 'jump-port' ] ] }
+      fixed_ips:
+        - subnet: { get_resource: Subnet }
+      security_groups:
+        - { get_resource: JumpSecurityGroup }
+      network: { get_resource: Net }
+
+  Jump:
+    type: OS::Nova::Server
+    properties:
+      name: { list_join: [ '-', [ { get_param: 'Cvicenie' }, 'jump' ] ] }
+      availability_zone: { get_param: 'AvailabilityZone' }
+      flavor: { get_param: 'Flavor' }
+      image: { get_param: 'Image' } 
+      #network: { get_param: 'Network' }
+      networks: 
+        - port: { get_resource: JumpPort }
+        #- subnet: { get_resource: Subnet }
+      user_data: |
+        str_replace:
+          template: |
+            #!/bin/bash
+            hostname $Enviroment-jump
+            echo "JumpCloud"
+          params:
+            $Enviroment: { get_param: Enviroment }    
+      user_data_format: RAW
+
+  JumpFloatingIpAssociation:
+    type: OS::Neutron::FloatingIPAssociation
+    properties:
+      floatingip_id: { get_param: JumpFloatingIpID }
+      port_id: { get_resource: JumpPort }
+      
+  ApacheSecurityGroup:
+    type: OS::Neutron::SecurityGroup
+    properties:
+      name: { list_join: [ '-', [ { get_param: 'Cvicenie' }, 'Application-security-group' ] ] }
+      rules: [
+      { direction: ingress, ethertype: IPv4, protocol: tcp, port_range_min: 22, port_range_max: 22, remote_ip_prefix: 10.255.255.0/24 },
+      { direction: ingress, ethertype: IPv4, protocol: tcp, port_range_min: 80, port_range_max: 80, remote_ip_prefix: 10.255.255.0/24 },
+      { direction: ingress, ethertype: IPv4, protocol: tcp, port_range_min: 80, port_range_max: 80, remote_ip_prefix: 158.193.0.0/16 },
+      { direction: ingress, ethertype: IPv4, protocol: tcp, port_range_min: 443, port_range_max: 443, remote_ip_prefix: 10.255.255.0/24 },
+      { direction: ingress, ethertype: IPv4, protocol: icmp, remote_ip_prefix: 10.255.255.0/24 },
+      ]
+
+  ApachePort:
+    type: OS::Neutron::Port
+    properties:
+      name: { list_join: [ '-', [ { get_param: 'Cvicenie' }, 'apache-port' ] ] }
+      fixed_ips:
+        - subnet: { get_resource: Subnet }
+      security_groups:
+        - { get_resource: ApacheSecurityGroup }
+      network: { get_resource: Net }
+
+  Apache:
+    type: OS::Nova::Server
+    properties:
+      #name: instance-cv3
+      name: { list_join: [ '-', [ { get_param: 'Cvicenie' }, 'apache' ] ] }
+      availability_zone: { get_param: 'AvailabilityZone' }
+      flavor: { get_param: 'Flavor' }
+      image: { get_param: 'Image' } 
+      networks: 
+        - port: { get_resource: ApachePort }
+      user_data: |
+        str_replace:
+          template: |
+            #!/bin/bash
+            hostname $Enviroment-apache
+            apt-get update -y 
+            apt-get install apache2 -y
+          params:
+            $Enviroment: { get_param: Enviroment }    
+      user_data_format: RAW
+Contact GitHub API Training Shop Blog About
+© 2017 GitHub, Inc. Terms Privacy Security Status Help
