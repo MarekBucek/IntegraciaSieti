@@ -221,6 +221,34 @@ resources:
             hostname $Enviroment-proxy
             apt-get update -y 
             apt-get install apache2 -y
+            service apache2 start
+            
+            cat>/etc/apache2/sites-available/25-integracia-6.conf<<EOF
+            <VirtualHost *:80>
+            ServerName integracia-6.cloud-kis.net
+            ServerAlias www.integracia-6.cloud-kis.net
+
+            ServerAdmin crisit@azet.sk
+            #DocumentRoot /var/www/html
+
+            ProxyPreserveHost on
+            ProxyRequests off
+
+            ProxyPass / http://10.255.255.4/
+            ProxyPassReverse / http://10.255.255.4/
+
+            ErrorLog /var/log/apache2/integracia-6.cloud-kis.net_error.log
+            CustomLog ${APACHE_LOG_DIR}/integracia-6.cloud-kis.net_access.log combined
+            </VirtualHost>
+            EOF
+            
+            a2dissite 000-default.conf
+            a2ensite 25-integracia-6.conf
+            a2enmod proxy
+            a2enmod proxy_http
+            service apache2 reload
+            service apache2 restart
+            
           params:
             $Enviroment: { get_param: Enviroment }    
       user_data_format: RAW
