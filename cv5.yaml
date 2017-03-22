@@ -37,12 +37,12 @@ parameters:
   JumpFloatingIpID:
     description: JumpFloatingIpID
     type: string
-    default: 979d0edf-41e0-4ce0-aa58-bded78b98b10 
+    default: e5c3cbbb-6493-43d0-a671-7c3b224d55af
   
   ProxyFloatingIpID:
     description: ProxyFloatingIpID
     type: string
-    default: 929cc9d6-b3b4-4d16-a358-f8692636fe3a 
+    default: e61708b5-e889-450d-b85c-c014041325fd
         
 resources:
   Net:
