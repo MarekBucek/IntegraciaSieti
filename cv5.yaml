@@ -17,7 +17,7 @@ parameters:
   Flavor:
     description: Flavor
     type: string
-    default: Linux
+    default: linux
     
   Image:
     description: Image
