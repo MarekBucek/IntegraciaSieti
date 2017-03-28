@@ -22,7 +22,7 @@ parameters:
   Image:
     description: Image
     type: string
-    default: Ubuntu server 14.04 amd64 KIS
+    default: ubuntu_server_14.04_amd64_KIS
   
   Enviroment:
     description: Enviroment
