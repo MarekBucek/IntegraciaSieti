@@ -119,16 +119,16 @@ resources:
         {  direction: ingress, ethertype: IPv4, protocol: tcp, port_range_min: 53, port_range_max: 53, remote_ip_prefix: 10.0.2.0/24 },
       ]
       
-  DefSecurityGroup:
-    type: OS::Neutron::SecurityGroup
-    properties:
-      name: { list_join: [ '-', [ { get_param: 'Popis' }, 'def-security-group' ] ] }
-      rules: [
-        {  direction: ingress, ethertype: IPv4, protocol: tcp, port_range_min: 22, port_range_max: 22, remote_ip_prefix: 10.0.1.0/24 },
-        {  direction: ingress, ethertype: IPv4, protocol: tcp, port_range_min: 22, port_range_max: 22, remote_ip_prefix: 10.0.2.0/24 },
-        {  direction: ingress, ethertype: IPv4, protocol: tcp, port_range_min: 53, port_range_max: 53, remote_ip_prefix: 10.0.1.0/24 },
-        {  direction: ingress, ethertype: IPv4, protocol: tcp, port_range_min: 53, port_range_max: 53, remote_ip_prefix: 10.0.2.0/24 },
-      ]
+  #DefSecurityGroup:
+  #  type: OS::Neutron::SecurityGroup
+  # properties:
+  #    name: { list_join: [ '-', [ { get_param: 'Popis' }, 'def-security-group' ] ] }
+  #    rules: [
+  #      {  direction: ingress, ethertype: IPv4, protocol: tcp, port_range_min: 22, port_range_max: 22, remote_ip_prefix: 10.0.1.0/24 },
+  #      {  direction: ingress, ethertype: IPv4, protocol: tcp, port_range_min: 22, port_range_max: 22, remote_ip_prefix: 10.0.2.0/24 },
+  #      {  direction: ingress, ethertype: IPv4, protocol: tcp, port_range_min: 53, port_range_max: 53, remote_ip_prefix: 10.0.1.0/24 },
+  #      {  direction: ingress, ethertype: IPv4, protocol: tcp, port_range_min: 53, port_range_max: 53, remote_ip_prefix: 10.0.2.0/24 },
+  #   ]
       
   DefPort:
     type: OS::Neutron::Port
@@ -136,8 +136,8 @@ resources:
       name: { list_join: [ '-', [ { get_param: 'Popis' }, 'default-port' ] ] }
       fixed_ips:
         - subnet: { get_resource: Subnet1 }
-      security_groups:
-        - { get_resource: DefSecurityGroup }
+      #security_groups:
+      #  - { get_resource: DefSecurityGroup }
       network: { get_resource: Net }
       
   DNSPort:
