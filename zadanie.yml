@@ -65,6 +65,7 @@ resources:
         - 8.8.8.8
         - 8.8.4.4
       enable_dhcp: True
+      gateway_ip: 10.0.1.1
       network: { get_resource: Net }
       
   Subnet2:
@@ -76,6 +77,7 @@ resources:
         - 8.8.8.8
         - 8.8.4.4
       enable_dhcp: True
+      gateway_ip: 10.0.2.1
       network: { get_resource: Net }
       
   Router:
@@ -154,7 +156,7 @@ resources:
     type: OS::Nova::Server
     properties:
       #name: instance-cv3
-      name: { list_join: [ '-', [ { get_param: 'Cvicenie' }, 'DNSko' ] ] }
+      name: { list_join: [ '-', [ { get_param: 'Popis' }, 'DNSko' ] ] }
       availability_zone: { get_param: 'AvailibilityZone' }
       flavor: { get_param: 'Flavor-DNS' }
       image: { get_param: 'Image-DNS' }
@@ -164,7 +166,7 @@ resources:
         str_replace:
           template: |
             #!/bin/bash
-            hostname $Enviroment-app
+            hostname $Enviroment-DNS
             apt-get update -y
             apt-get install bind9 -y
           params:
