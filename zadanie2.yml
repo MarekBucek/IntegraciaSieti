@@ -1,0 +1,194 @@
+---
+heat_template_version: 2016-04-08
+description: Skuskove zadanie
+
+parameters:
+  Cvicenie:
+    description: Skuskove zadanie
+    type: string
+    default: 17_5_2017
+
+  AvailibilityZone:
+    description: Availability zone
+    type: string
+    default: any
+
+  Flavor1:
+    description: Flavor
+    type: string
+    default: nano
+
+  Image1:
+    description: image
+    type: string
+    default: cirros
+
+  Flavor2:
+    description: Flavor
+    type: string
+    default: linux
+
+  Image2:
+    description: image
+    type: string
+    default: Debian_8.7.1_amd64_Openstack
+
+  Enviroment:
+    description: Enviroment
+    type: string
+    default: skuska
+
+  SubnetCidrPrivate:
+    description: SubnetCidrPrivate
+    type: string
+    default: 10.0.1.0/24
+
+  SubnetCidrPrivate2:
+    description: SubnetCidrPrivate
+    type: string
+    default: 10.0.2.0/24
+
+resources:
+  Net:
+    type: OS::Neutron::Net
+    properties:
+      admin_state_up: True
+      name: { list_join: [ '-', [ { get_param: 'Enviroment' }, 'network' ] ] }
+      shared: False
+
+  SubnetPrivate1:
+    type: OS::Neutron::Subnet
+    properties:
+      name: { list_join: [ '-', [ { get_param: 'Enviroment' }, 'network' ] ] }
+      cidr: { get_param: SubnetCidrPrivate }
+      dns_nameservers:
+        - 8.8.8.8
+        - 8.8.4.4
+      enable_dhcp: True
+      host_routes: [
+        { nexthop: 10.255.254.1, destination: 10.255.254.0/24 }
+      ]
+      gateway_ip: 10.255.255.1
+      network: { get_resource: Net }
+
+  SubnetPrivate2:
+    type: OS::Neutron::Subnet
+    properties:
+      name: { list_join: [ '-', [ { get_param: 'Enviroment' }, 'network' ] ] }
+      cidr: { get_param: SubnetCidrPrivate2 }
+      dns_nameservers:
+        - 8.8.8.8
+        - 8.8.4.4
+      enable_dhcp: True
+      host_routes: [
+        { nexthop: 10.255.255.1, destination: 10.255.255.0/24 }
+      ]
+      gateway_ip: 10.255.254.1
+      network: { get_resource: Net }
+
+  Router:
+    type: OS::Neutron::Router
+    properties:
+      admin_state_up: True
+      name: { list_join: [ '-', [ { get_param: 'Enviroment' }, 'router' ] ] }
+      external_gateway_info: {
+        enable_snat: True,
+        network: ext-net
+      }
+
+  RouterInterface1:
+    type: OS::Neutron::RouterInterface
+    properties:
+      #port: { get_resource: 'RouterPort2' }
+      router: { get_resource: Router }
+      subnet: { get_resource: SubnetPrivate1 }
+
+  RouterInterface2:
+    type: OS::Neutron::RouterInterface
+    properties:
+      #por
+      router: { get_resource: Router }
+      subnet: { get_resource: SubnetPrivate2 }
+
+  Server1PortPrivateSecurityGroup:
+    type: OS::Neutron::SecurityGroup
+    properties:
+      name: { list_join: [ '-', [ { get_param: 'Cvicenie' }, 'app-private-security-group' ] ] }
+      rules: [
+        {  direction: ingress, ethertype: IPv4, protocol: tcp, port_range_min: 22, port_range_max: 22, remote_ip_prefix: 10.255.255.0/24 },
+        {  direction: ingress, ethertype: IPv4, protocol: tcp, port_range_min: 22, port_range_max: 22, remote_ip_prefix: 10.255.254.0/24 },
+        {  direction: ingress, ethertype: IPv4, protocol: tcp, port_range_min: 53, port_range_max: 53, remote_ip_prefix: 10.255.255.0/24 },
+        {  direction: ingress, ethertype: IPv4, protocol: tcp, port_range_min: 53, port_range_max: 53, remote_ip_prefix: 10.255.254.0/24 },
+      ]
+
+  Server2PortPrivateSecurityGroup:
+    type: OS::Neutron::SecurityGroup
+    properties:
+      name: { list_join: [ '-', [ { get_param: 'Cvicenie' }, 'app-private-security-group' ] ] }
+      rules: [
+        {  direction: ingress, ethertype: IPv4, protocol: tcp, port_range_min: 22, port_range_max: 22, remote_ip_prefix: 10.255.255.0/24 },
+        {  direction: ingress, ethertype: IPv4, protocol: tcp, port_range_min: 22, port_range_max: 22, remote_ip_prefix: 10.255.254.0/24 },
+        {  direction: ingress, ethertype: IPv4, protocol: tcp, port_range_min: 53, port_range_max: 53, remote_ip_prefix: 10.255.255.0/24 },
+        {  direction: ingress, ethertype: IPv4, protocol: tcp, port_range_min: 53, port_range_max: 53, remote_ip_prefix: 10.255.254.0/24 },
+      ]
+
+  Server1Port:
+    type: OS::Neutron::Port
+    properties:
+      name: { list_join: [ '-', [ { get_param: 'Cvicenie' }, 'Server1Port-port' ] ] }
+      fixed_ips:
+        - subnet: { get_resource: SubnetPrivate1 }
+      security_groups:
+        - { get_resource: Server1PortPrivateSecurityGroup }
+      network: { get_resource: Net }
+
+  Server2Port:
+    type: OS::Neutron::Port
+    properties:
+      name: { list_join: [ '-', [ { get_param: 'Cvicenie' }, 'Server2Port-port' ] ] }
+      fixed_ips:
+        - subnet: { get_resource: SubnetPrivate2 }
+      security_groups:
+        - { get_resource: Server2PortPrivateSecurityGroup }
+      network: { get_resource: Net }
+
+  Server1:
+    type: OS::Nova::Server
+    properties:
+      #name: instance-cv3
+      name: { list_join: [ '-', [ { get_param: 'Cvicenie' }, 'jump' ] ] }
+      availability_zone: { get_param: 'AvailibilityZone' }
+      flavor: { get_param: 'Flavor1' }
+      image: { get_param: 'Image1' }
+      networks:
+        - port: { get_resource: 'Server1Port' }
+      user_data:
+        str_replace:
+          template: |
+            #!/bin/bash
+            hostname $Enviroment-server1
+            echo "Hello World !!!"
+          params:
+            $Enviroment: { get_param: Enviroment }
+      user_data_format: RAW
+
+  Server2:
+    type: OS::Nova::Server
+    properties:
+      #name: instance-cv3
+      name: { list_join: [ '-', [ { get_param: 'Cvicenie' }, 'jump' ] ] }
+      availability_zone: { get_param: 'AvailibilityZone' }
+      flavor: { get_param: 'Flavor2' }
+      image: { get_param: 'Image2' }
+      networks:
+        - port: { get_resource: 'Server2Port' }
+      user_data:
+        str_replace:
+          template: |
+            #!/bin/bash
+            hostname $Enviroment-server2
+            echo "Hello World !!!"
+            apt-get install bind9 -y
+          params:
+            $Enviroment: { get_param: Enviroment }
+      user_data_format: RAW
