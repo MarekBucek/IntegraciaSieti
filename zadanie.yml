@@ -65,6 +65,9 @@ resources:
         - 8.8.8.8
         - 8.8.4.4
       enable_dhcp: True
+      host_routes: [
+        { nexthop: 10.0.2.1, destination: 10.0.2.0/24 }
+      ]
       gateway_ip: 10.0.1.1
       network: { get_resource: Net }
       
@@ -77,6 +80,9 @@ resources:
         - 8.8.8.8
         - 8.8.4.4
       enable_dhcp: True
+      host_routes: [
+        { nexthop: 10.0.1.1, destination: 10.0.1.0/24 }
+      ]
       gateway_ip: 10.0.2.1
       network: { get_resource: Net }
       
@@ -107,9 +113,21 @@ resources:
     properties:
       name: { list_join: [ '-', [ { get_param: 'Popis' }, 'DNS-security-group' ] ] }
       rules: [
-        {  direction: ingress, ethertype: IPv4, protocol: tcp, port_range_min: 22, port_range_max: 22, remote_ip_prefix: 10.255.255.0/24 },
-        {  direction: ingress, ethertype: IPv4, protocol: tcp, port_range_min: 53, port_range_max: 53, remote_ip_prefix: 10.255.255.0/24 },
-        {  direction: ingress, ethertype: IPv4, protocol: icmp, remote_ip_prefix: 10.255.255.0/24 }
+        {  direction: ingress, ethertype: IPv4, protocol: tcp, port_range_min: 22, port_range_max: 22, remote_ip_prefix: 10.0.1.0/24 },
+        {  direction: ingress, ethertype: IPv4, protocol: tcp, port_range_min: 22, port_range_max: 22, remote_ip_prefix: 10.0.2.0/24 },
+        {  direction: ingress, ethertype: IPv4, protocol: tcp, port_range_min: 53, port_range_max: 53, remote_ip_prefix: 10.0.1.0/24 },
+        {  direction: ingress, ethertype: IPv4, protocol: tcp, port_range_min: 53, port_range_max: 53, remote_ip_prefix: 10.0.2.0/24 },
+      ]
+      
+  DefSecurityGroup:
+    type: OS::Neutron::SecurityGroup
+    properties:
+      name: { list_join: [ '-', [ { get_param: 'Popis' }, 'def-security-group' ] ] }
+      rules: [
+        {  direction: ingress, ethertype: IPv4, protocol: tcp, port_range_min: 22, port_range_max: 22, remote_ip_prefix: 10.0.1.0/24 },
+        {  direction: ingress, ethertype: IPv4, protocol: tcp, port_range_min: 22, port_range_max: 22, remote_ip_prefix: 10.0.2.0/24 },
+        {  direction: ingress, ethertype: IPv4, protocol: tcp, port_range_min: 53, port_range_max: 53, remote_ip_prefix: 10.0.1.0/24 },
+        {  direction: ingress, ethertype: IPv4, protocol: tcp, port_range_min: 53, port_range_max: 53, remote_ip_prefix: 10.0.2.0/24 },
       ]
       
   DefPort:
@@ -118,8 +136,8 @@ resources:
       name: { list_join: [ '-', [ { get_param: 'Popis' }, 'default-port' ] ] }
       fixed_ips:
         - subnet: { get_resource: Subnet1 }
-     # security_groups:
-     #   - { get_resource: default }
+      security_groups:
+        - { get_resource: DefSecurityGroup }
       network: { get_resource: Net }
       
   DNSPort:
@@ -172,5 +190,3 @@ resources:
           params:
             $Enviroment: { get_param: Enviroment }
       user_data_format: RAW
-      
-    
