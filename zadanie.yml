@@ -6,7 +6,7 @@ parameters:
   Popis:
     description: Skuskove zadanie
     type: string
-    default: zadanie
+    default: 17_5_2017
 
   AvailibilityZone:
     description: Availability zone
